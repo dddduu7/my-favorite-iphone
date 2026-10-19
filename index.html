@@ -1,0 +1,363 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>My iPhone</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#dce5ea;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+
+.phone{width:min(390px,100vw);height:min(820px,100dvh);min-height:600px;margin:auto;background:#080e19;border:8px solid #222;border-radius:48px;overflow:hidden;position:relative;color:white}
+
+.screen{height:100%;position:relative;background:radial-gradient(ellipse at 10% 30%,#c9efff,transparent 40%),radial-gradient(ellipse at 85% 20%,#367cb1,transparent 48%),linear-gradient(145deg,#70b8e6,#102c58 70%,#061124)}
+
+.status{height:35px;padding:9px 17px;font-size:12px;display:flex;justify-content:space-between}
+
+.island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:105px;height:27px;border-radius:20px;background:#000}
+
+.lock{text-align:center;padding-top:75px}
+
+.date{font-size:19px;font-weight:600}
+
+.time{font-size:76px;font-weight:650;letter-spacing:-4px}
+
+.unlock{position:absolute;bottom:22px;width:100%;text-align:center;cursor:pointer}
+
+.bar{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:105px;height:5px;border-radius:5px;background:white;z-index:9;cursor:pointer}
+
+.home{display:none;height:calc(100% - 35px);padding:32px 20px;background:linear-gradient(145deg,#b9e5fa,#5599c9 45%,#102b53);overflow:auto}
+
+.widget{padding:15px;border-radius:22px;background:#ffffff38;margin-bottom:28px;backdrop-filter:blur(10px)}
+
+.widget strong{display:block;font-size:32px;margin:5px 0}
+
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:25px 10px}
+
+.app{border:0;background:none;color:white;font:inherit;cursor:pointer;display:flex;align-items:center;flex-direction:column;gap:6px}
+
+.icon{height:62px;width:62px;border-radius:16px;background:#fff;color:#333;display:grid;place-items:center;font-size:29px;box-shadow:0 4px 12px #0002}
+
+.green{background:#39c96b;color:white}.orange{color:#efa52e}.red{color:#ed505b}.yellow{color:#d5ad24}.blue{background:#4197ed;color:white}
+
+.dock{display:flex;justify-content:space-around;background:#ffffff45;border-radius:24px;padding:12px;margin-top:30px}
+
+.panel{display:none;position:absolute;inset:35px 0 0;background:#f5f5f7;color:#171719;border-radius:27px 27px 0 0;padding:18px 15px 30px;overflow:auto;z-index:5}
+
+.head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+
+.back{border:0;border-radius:50%;padding:8px 14px;font-size:22px}
+
+h2{margin:0;font-size:22px}
+
+input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:12px;font:inherit;margin:5px 0 10px;background:white;color:#111}
+
+button.action{border:0;background:#1682f8;color:white;padding:12px;border-radius:12px;font:inherit;cursor:pointer}
+
+.item{background:white;padding:13px;border-radius:13px;margin:8px 0;overflow-wrap:anywhere}
+
+.msg{background:#e5e5ea;padding:11px 14px;border-radius:17px;margin:8px 0;max-width:88%;white-space:pre-wrap;overflow-wrap:anywhere}
+
+.mine{background:#1685f8;color:white;margin-left:auto}
+
+.hint{font-size:12px;color:#777;line-height:1.5}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="phone"><div class="screen" id="screen">
+
+<div class="status"><span id="smalltime">오전 12:00</span><span>▮▮▮ 5G ▰</span></div>
+
+<div class="island"></div>
+
+<div class="lock" id="lock">
+
+<div class="date" id="date"></div>
+
+<div class="time" id="time"></div>
+
+</div>
+
+<div class="unlock" id="unlock">위로 밀어서 열기<br><br>⌃</div>
+
+<div class="home" id="home">
+
+<div class="widget"><span id="today"></span><strong id="hometime"></strong>오늘의 기록</div>
+
+<div class="apps">
+
+<button class="app" onclick="openApp('phone')"><span class="icon green">☎</span>전화</button>
+
+<button class="app" onclick="openApp('clock')"><span class="icon orange">◷</span>시계</button>
+
+<button class="app" onclick="openApp('calendar')"><span class="icon red">20</span>캘린더</button>
+
+<button class="app" onclick="openApp('photos')"><span class="icon">🌈</span>사진</button>
+
+<button class="app" onclick="openApp('notes')"><span class="icon yellow">▤</span>노트</button>
+
+<button class="app" onclick="openApp('messages')"><span class="icon blue">●</span>메시지</button>
+
+</div>
+
+<div class="dock">
+
+<button class="app" onclick="openApp('phone')"><span class="icon green">☎</span></button>
+
+<button class="app" onclick="openApp('messages')"><span class="icon blue">●</span></button>
+
+<button class="app" onclick="openApp('photos')"><span class="icon">🌈</span></button>
+
+</div>
+
+</div>
+
+<div class="panel" id="panel">
+
+<div class="head"><button class="back" onclick="closeApp()">‹</button><h2 id="title"></h2></div>
+
+<div id="content"></div>
+
+</div>
+
+<div class="bar" onclick="goHome()"></div>
+
+</div></div>
+
+<script>
+
+const $=id=>document.getElementById(id);
+
+const weekdays=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+
+let opened=false, contacts=[{name:'최애',number:'010-0000-0000'}];
+
+let chat=[{mine:false,text:'오늘 뭐 해?'}], note='';
+
+function tick(){
+
+ const d=new Date(),h=d.getHours(),m=String(d.getMinutes()).padStart(2,'0');
+
+ const t=String(h%12||12).padStart(2,'0')+':'+m;
+
+ const date=(d.getMonth()+1)+'월 '+d.getDate()+'일 '+weekdays[d.getDay()];
+
+ $('time').textContent=t;$('hometime').textContent=t;
+
+ $('date').textContent=date;$('today').textContent=date;
+
+ $('smalltime').textContent=(h<12?'오전 ':'오후 ')+t;
+
+}
+
+tick();setInterval(tick,1000);
+
+function goHome(){
+
+ opened=true;$('lock').style.display='none';
+
+ $('unlock').style.display='none';$('home').style.display='block';
+
+ $('panel').style.display='none';
+
+}
+
+$('unlock').onclick=goHome;
+
+$('lock').onclick=goHome;
+
+function closeApp(){$('panel').style.display='none'}
+
+function openApp(app){
+
+ goHome();$('panel').style.display='block';
+
+ const names={phone:'전화',clock:'시계',calendar:'캘린더',photos:'사진',notes:'노트',messages:'메시지'};
+
+ $('title').textContent=names[app];
+
+ const c=$('content');c.innerHTML='';
+
+ if(app==='phone'){
+
+ c.innerHTML=`
+
+ <h3>연락처</h3><div id="contacts"></div>
+
+ <input id="name" placeholder="이름"><input id="number" placeholder="전화번호">
+
+ <button class="action" onclick="saveContact()">연락처 저장</button>
+
+ <hr><input id="dial" placeholder="전화번호 또는 이름">
+
+ <button class="action" onclick="callContact()">전화 걸기</button>
+
+ <div id="callresult"></div><p class="hint">가상 통화입니다. 실제 전화는 걸리지 않습니다.</p>`;
+
+ drawContacts();
+
+ }
+
+ if(app==='clock'){
+
+ c.innerHTML=`<div class="item" style="text-align:center"><h1 id="clockbig"></h1>현재 시각</div>
+
+ <h3>알람</h3><input id="alarm" type="time" value="07:00">
+
+ <button class="action" onclick="setAlarm()">알람 설정</button><div id="alarmresult"></div>`;
+
+ function clock(){if($('clockbig'))$('clockbig').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}
+
+ clock();setInterval(clock,1000);
+
+ }
+
+ if(app==='calendar'){
+
+ c.innerHTML=`<div class="item"><h3>${new Date().getFullYear()}년 ${new Date().getMonth()+1}월 ${new Date().getDate()}일</h3>
+
+ <input id="event" placeholder="일정 이름"><input id="eventtime" type="time">
+
+ <button class="action" onclick="addEvent()">일정 추가</button></div><div id="events"></div>`;
+
+ }
+
+ if(app==='photos'){
+
+ c.innerHTML=`<h3>사진 보관함</h3><input type="file" accept="image/*" id="photo">
+
+ <div id="preview" class="item">사진을 선택해 주세요.</div>`;
+
+ $('photo').onchange=e=>{
+
+ const f=e.target.files[0];if(!f)return;
+
+ const url=URL.createObjectURL(f);
+
+ $('preview').innerHTML=`<img src="${url}" style="width:100%;border-radius:12px"><p>${escapeHTML(f.name)}</p>`;
+
+ };
+
+ }
+
+ if(app==='notes'){
+
+ c.innerHTML=`<textarea id="note" rows="12" placeholder="비밀 노트...">${escapeHTML(note)}</textarea>
+
+ <button class="action" onclick="saveNote()">저장</button><p id="notestatus"></p>`;
+
+ }
+
+ if(app==='messages'){
+
+ c.innerHTML=`<div class="hint">최애 · 메시지</div><div id="chat"></div>
+
+ <input id="message" placeholder="iMessage">
+
+ <button class="action" onclick="sendMessage()">보내기 ↑</button>
+
+ <p class="hint">비밀 이벤트 단어: 비밀 / 보고 싶어 / 열쇠</p>`;
+
+ drawChat();
+
+ $('message').onkeydown=e=>{if(e.key==='Enter')sendMessage()};
+
+ }
+
+}
+
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function drawContacts(){
+
+ $('contacts').innerHTML=contacts.map(x=>`<div class="item"><b>${escapeHTML(x.name)}</b><br>${escapeHTML(x.number)}</div>`).join('');
+
+}
+
+function saveContact(){
+
+ const n=$('name').value.trim(),p=$('number').value.trim();
+
+ if(!n||!p)return alert('이름과 전화번호를 입력해 주세요.');
+
+ contacts.push({name:n,number:p});drawContacts();
+
+ $('name').value='';$('number').value='';
+
+}
+
+function callContact(){
+
+ const q=$('dial').value.trim();
+
+ const c=contacts.find(x=>x.name===q||x.number===q);
+
+ $('callresult').innerHTML=`<div class="item"><b>${escapeHTML(c?c.name:q||'알 수 없는 번호')}에게 전화 중...</b>
+
+ <p>“여보세요? 무슨 일이야?”</p><p>“지금은 통화할 수 있어. 무슨 얘기야?”</p>
+
+ <button class="action" onclick="this.parentElement.innerHTML='통화 종료 · 00:42'">통화 종료</button></div>`;
+
+}
+
+function setAlarm(){$('alarmresult').innerHTML='<div class="item">알람 설정: '+escapeHTML($('alarm').value)+'</div>'}
+
+function addEvent(){
+
+ const t=$('event').value.trim();if(!t)return;
+
+ $('events').innerHTML+=`<div class="item">${escapeHTML($('eventtime').value)} · ${escapeHTML(t)}</div>`;
+
+ $('event').value='';
+
+}
+
+function saveNote(){note=$('note').value;$('notestatus').textContent='저장했어요.'}
+
+function drawChat(){
+
+ $('chat').innerHTML=chat.map(m=>`<div class="msg ${m.mine?'mine':''}">${escapeHTML(m.text)}</div>`).join('');
+
+ $('chat').scrollTop=$('chat').scrollHeight;
+
+}
+
+function sendMessage(){
+
+ const el=$('message'),t=el.value.trim();if(!t)return;
+
+ chat.push({mine:true,text:t});
+
+ let reply='응? 무슨 일이야?';
+
+ if(t.includes('비밀'))reply='그 얘기를 어떻게 알았어? 우리 둘만 아는 비밀인데…';
+
+ else if(t.includes('보고 싶어'))reply='나도 조금은 보고 싶었어. 지금 어디야?';
+
+ else if(t.includes('열쇠'))reply='서랍 안쪽을 확인해 봐. 거기에 단서가 있어.';
+
+ else if(t.includes('누구'))reply='그건 지금 말해 줄 수 없어. 직접 찾아봐.';
+
+ chat.push({mine:false,text:reply});el.value='';drawChat();
+
+}
+
+</script>
+
+</body>
+
+</html>
